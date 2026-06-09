@@ -10,7 +10,6 @@ import yfinance as yf
 BARK_KEY = os.environ.get("BARK_KEY")
 
 # 🎯 专门针对海外服务器定制的 A 股核心硬科技瓶颈股自选池（100% 畅通无阻）
-# 包含科创板/主板：绿的谐波、思瑞浦、中芯国际、寒武纪、拓荆科技、中微公司、兆易创新、韦尔股份、北方华创、江丰电子等
 A_STOCK_POOL = [
     "688017.SS", "688536.SS", "688981.SS", "688256.SS", 
     "688072.SS", "688012.SS", "603986.SS", "603501.SS",
@@ -40,21 +39,13 @@ def send_to_bark_raw(title: str, content: str, group: str = "A股主力爆破"):
         if res.status_code == 200: print(f"🇨🇳 成功推送 A 股异动通知：{title}")
     except Exception as e: print(f"❌ 推送失败: {e}")
 
-def calculate_rsi(prices, period=14):
-    if len(prices) < period + 1: return 50
-    deltas = prices.diff().dropna()
-    gains = deltas.clip(lower=0)
-    losses = -deltas.clip(upper=0)
-    avg_gain = gains.ewm(com=period-1, min_periods=period).mean()
-    avg_loss = losses.ewm(com=period-1, min_periods=period).mean()
-    rs = avg_gain / avg_loss
-    return (100 - (100 / (1 + rs))).iloc[-1]
-
 def execute_china_strategy():
     # 强制加上 timedelta(hours=8)，完美校准北京时间
     bj_time = datetime.utcnow() + timedelta(hours=8)
     bj_hour = bj_time.hour
-    print(f"⏰ 北京时间实时完美校准为: {bj_time.strftime('%H:%M('%S')')}")
+    
+    # ✨ ✨ 终极彻底修复：纠正了此处多余的拼写乱码，换回标准合法的北京时间格式打印
+    print(f"⏰ 北京时间实时完美校准为: {bj_time.strftime('%H:%M:%S')}")
 
     # ⏱️ A股专用时间锁
     if not (8 <= bj_hour < 22):
@@ -99,20 +90,16 @@ def execute_china_strategy():
             print(f"   📊 结果 -> 3日均成交额: ￥{avg_3day_turnover:,.0f} | 今日放量: {current_multiplier:.2f}x")
             
             # ==================== 🪓 A 股终极多维过滤器矩阵 ====================
-            # 1. 过滤股价低于 2 元的人民币仙股
             if price_today < 2.0: continue
-            
-            # 2. 硬性卡死：近3日平均日成交额必须大于 5000 万人民币
             if avg_3day_turnover < MIN_3DAY_AVG_TURNOVER_RMB: continue
             
-            # 3. 严格契合 3.0 倍突发扫货大铁律
             if current_multiplier >= A_VOLUME_MULTIPLIER:
                 raw_shares = SINGLE_A_BUDGET_RMB / price_today
                 suggested_shares = int(raw_shares // 100) * 100  # A 股必须是 100 股的整数倍
                 if suggested_shares < 100: suggested_shares = 100
                 stop_loss_price = price_today * 0.93  
                 
-                # 提取股票官方中文名字
+                # 提取股票官方简称
                 stock_name = ticker.info.get("shortName", ticker_symbol)
                 
                 push_title = f"🇨🇳 A股核心暴破：【{stock_name}】！"
