@@ -32,7 +32,7 @@ def send_to_bark_raw(title: str, content: str, group: str = "A股主力爆破"):
     encoded_title = urllib.parse.quote_plus(title)
     encoded_content = urllib.parse.quote_plus(content)
     encoded_group = urllib.parse.quote_plus(group)
-    url = f"https://day.app{clean_key}/{encoded_title}/{encoded_content}?group={encoded_group}&sound=glass"
+    url = f"https://api.day.app/{clean_key}/{encoded_title}/{encoded_content}?group={encoded_group}&sound=glass"
     try: requests.get(url, timeout=15)
     except Exception as e: print(f"❌ 推送失败: {e}", flush=True)
 
